@@ -1,9 +1,10 @@
-const inquirer = require('inquirer');
-const mysql = require('mysql');
-const cTable = require('console.table');
 const PORT = process.env.PORT || 3000
+const mysql = require('mysql2');
+const inquirer = require('inquirer');
+const cTable = require('console.table');
 
-const db = mysql.createConnection(
+
+const db =  mysql.createConnection(
     {
         host: 'localhost',
         user: 'root',
@@ -19,7 +20,7 @@ db.connect(function (err) {
 })
 
 function startApp() {
-    inquirer
+    return inquirer
     .prompt([
         {
             message: "Welcome to the Employee Manager App"
