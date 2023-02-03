@@ -19,10 +19,11 @@ db.connect(function (err) {
 });
 
 function startApp() {
-    return inquirer
+    inquirer
     .prompt([
         {
-            message: "Welcome to the Employee Manager App"
+            message: "Welcome to the Employee Manager App",
+            name: 'welcome'
         },
         {
             type: 'list',
@@ -41,57 +42,58 @@ function startApp() {
         switch (response.choice) {
             case 'View all Employees?':
                 viewAllEmployees();
-            
+                break;
             case 'View all Employees Roles?':
                 viewAllEmployeesRoles();
-
+                break;
             case 'View all Employees by Department?':
                 viewAllEmployeesDepartment();
-
+                break;
             case 'Update Employees':
                 updateEmployees();
-
+                break;
             case 'Add Employees':
                 addEmployees();
-
+                break;
             case 'Add Role':
                 addRole();
-
+                break;
             case 'Add Department':
                 addDepartment();
+                break;
         }
+        startApp();
     })
 };
 
 function viewAllEmployees() {
-    db.query("SELECT employee.first_name, employee.last_name, roles.title, role.salary, department.name, CONCAT(e.first_name, ' ' ,e.last_name) AS Manager FROM employee INNER JOIN role on role.id = employee.role_id INNER JOIN department on department.id = role.department_id left join employee e on employee.manager_id = e.id;",
+    db.query("SELECT employees.first_name, employees.last_name, roles.title, roles.salary, department.department_name, CONCAT(e.first_name, ' ' ,e.last_name) AS Manager FROM employees INNER JOIN roles on roles.id = employees.roles_id INNER JOIN department on department.id = roles.department_id left join employees e on employees.manager_id = e.id;",
     function(err, res) {
         if (err) throw err
-        cTable(res)
-        startApp()
+        console.table(res)
     })
 };
 
 function viewAllEmployeesRoles() {
-    db.query('SELECT employee.first_name, employee.last_name, role.title AS Title FROM employee JOIN role ON employee.role_id = role.id;',
+    db.query('SELECT employees.first_name, employees.last_name, roles.title AS Title FROM employees JOIN roles ON employees.roles_id = roles.id;',
     function(err, res){
         if (err) throw err
-        cTable(res)
-        startApp()
+        console.table(res)
+        
     })
 };
 
 function viewAllEmployeesDepartment() {
-    db.query('SELECT employee.first_name, employee.last_name, department.name AS Department FROM employee JOIN role ON employee.role_id = role.id JOIN department ON role.department_id = department.id ORDER BY employee.id;',
+    db.query('SELECT employees.first_name, employees.last_name, department.department_name AS Department FROM employees JOIN roles ON employees.roles_id = roles.id JOIN department ON roles.department_id = department.id ORDER BY employees.id;',
     function(err, res) {
         if (err) throw err
-        cTable(res)
-        startApp()
+        console.table(res)
+        
     })
 };
 
 function updateEmployees() {
-    db.query('SELECT employee.last_name, role.title FROM employee JOIN role ON employee.role_id = role.id;',
+    db.query('SELECT employees.last_name, roles.title FROM employees JOIN roles ON employees.roles_id = roles.id;',
     function(err, res) {
         if (err) throw err
         console.log(res)
@@ -116,17 +118,17 @@ function updateEmployees() {
             }
         ]).then(function(response) {
             var roleID = selectRole().indexOf(val.role) ++
-            db.query('UPDATE employee SET WHERE ?',
+            db.query('UPDATE employees SET WHERE ?',
             {
                 last_name : response.lastName
             },
             {
-                role_id: roleID
+                roles_id: roleID
             },
             function(err) {
                 if (err) throw err
-                cTable(response)
-                startApp()
+                console.table(response)
+                
             })
         })
     })
@@ -163,18 +165,18 @@ function addEmployees() {
             first_name: response.firstname,
             last_name: response.lastName,
             manager_id: managerID,
-            role_id: roleID 
+            roles_id: roleID 
         },
         function(err) {
             if (err) throw err
-            cTable(response)
-            startApp()
+            console.table(response)
+            
         })
     })
 };
 
 function addRole() {
-    db.query("SELECT role.title AS Title, role.salary AS Salary FROM role;",
+    db.query("SELECT roles.title AS Title, roles.salary AS Salary FROM roles;",
     function(err, res) {
         inquirer
         .prompt([
@@ -187,15 +189,15 @@ function addRole() {
                 message: 'What is the Salary?'
             }
         ]).then(function(res){
-            db.query("INSERT INTO role SET ?",
+            db.query("INSERT INTO roles SET ?",
             {
                 title: res.Title,
                 salary: res.Salary
             },
             function(err) {
                 if (err) throw err
-                cTable(res)
-                startApp()
+                console.table(res)
+                
             })
         })
     })
@@ -215,15 +217,15 @@ function addDepartment(){
         },
         function(err) {
             if (err) throw err
-            cTable(res)
-            startApp()
+            console.table(res)
+            
         })
     })
 };
 
 var rolesArr = []
 function selectRole() {
-    db.query('SELECT * FROM role',
+    db.query('SELECT * FROM roles',
     function(err, res) {
         if (err) throw err
         for (i = 0; i < res.length; i++){
@@ -236,7 +238,7 @@ function selectRole() {
 var managersArr = []
 
 function selectManager() {
-    db.query("SELECT first_name, last_name FROM employee WHERE manager_id IS NULL;", function(err, res) {
+    db.query("SELECT first_name, last_name FROM employees WHERE manager_id IS NULL;", function(err, res) {
         if (err) throw err
         for ( i = 0; i < res.length; i++) {
             managersArr.push(res[i].first_name)
