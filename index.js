@@ -62,7 +62,7 @@ function startApp() {
                     addDepartment();
                     break;
             }
-            startApp();
+            // startApp();
         })
 };
 
@@ -71,6 +71,7 @@ function viewAllEmployees() {
         function (err, res) {
             if (err) throw err
             console.table(res)
+            startApp();
         })
 };
 
@@ -79,7 +80,7 @@ function viewAllEmployeesRoles() {
         function (err, res) {
             if (err) throw err
             console.table(res)
-
+            startApp();
         })
 };
 
@@ -88,12 +89,12 @@ function viewAllEmployeesDepartment() {
         function (err, res) {
             if (err) throw err
             console.table(res)
-
+            startApp();
         })
 };
 
 function updateEmployees() {
-    db.query('SELECT employees.last_name, roles.title FROM employees JOIN roles ON employees.roles_id = roles.id;',
+    return db.query('SELECT employees.last_name, roles.title FROM employees JOIN roles ON employees.roles_id = roles.id;',
         function (err, res) {
             if (err) throw err
             console.log(res)
@@ -118,19 +119,19 @@ function updateEmployees() {
                     choices: selectRole()
                 }
             ]).then(function (response) {
-                var roleID = selectRole().indexOf(response.role)
+                // var roleID = selectRole().indexOf(response.role) + 1
                 db.query('UPDATE employees SET last_name = ? WHERE roles_id = ?',
-                    [response.lastName,roleID],
+                    [response.lastName, response.roles_id],
                     function (err) {
                         if (err) throw err
                         console.table(response)
-
+                        startApp();
                     })
             })
         })
 };
 
-function addEmployees() {
+async function addEmployees() {
     return inquirer
         .prompt([
             {
@@ -154,9 +155,9 @@ function addEmployees() {
                 choices: selectManager()
             }
         ]).then(function (response) {
-            var roleID = selectRole().indexOf(response.role)++
-            var managerID = selectManager().indexOf(response.manager)++
-            db.query('INSERT INTO employee SET ?',
+            var roleID = selectRole().indexOf(response.role)+1
+            var managerID = selectManager().indexOf(response.manager)+1
+            db.query('INSERT INTO employees SET ?',
                 {
                     first_name: response.firstname,
                     last_name: response.lastName,
@@ -166,12 +167,12 @@ function addEmployees() {
                 function (err) {
                     if (err) throw err
                     console.table(response)
-
+                    startApp();
                 })
         })
 };
 
-function addRole() {
+async function addRole() {
     db.query("SELECT roles.title AS Title, roles.salary AS Salary FROM roles;",
         function (err, res) {
             return inquirer
@@ -193,7 +194,7 @@ function addRole() {
                         function (err) {
                             if (err) throw err
                             console.table(res)
-
+                            startApp();
                         })
                 })
         })
@@ -208,19 +209,22 @@ function addDepartment() {
                 type: 'input'
             },
         ]).then(function (res) {
-            db.query("INSERT INTO department (department_name) VALUES ('?')",
-                res.name,
+            var query = db.query("INSERT INTO department SET ?",
+                {
+                    department_name: res.name
+                },
+
                 function (err) {
                     if (err) throw err
                     console.table(res)
-
+                    startApp();
                 })
         })
 };
 
-
+ var rolesArr = []
 function selectRole() {
-    var rolesArr = []
+   
     db.query('SELECT * FROM roles',
         function (err, res) {
             if (err) throw err
@@ -232,9 +236,9 @@ function selectRole() {
 };
 
 
-
+ var managersArr = []
 function selectManager() {
-    var managersArr = []
+   
     db.query("SELECT first_name, last_name FROM employees WHERE manager_id IS NULL;", function (err, res) {
         if (err) throw err
         for (i = 0; i < res.length; i++) {
