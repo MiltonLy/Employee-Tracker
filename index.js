@@ -131,8 +131,8 @@ function updateEmployees() {
         })
 };
 
-async function addEmployees() {
-    return inquirer
+function addEmployees() {
+    inquirer
         .prompt([
             {
                 name: 'firstname',
@@ -160,7 +160,7 @@ async function addEmployees() {
             db.query('INSERT INTO employees SET ?',
                 {
                     first_name: response.firstname,
-                    last_name: response.lastName,
+                    last_name: response.lastname,
                     manager_id: managerID,
                     roles_id: roleID
                 },
